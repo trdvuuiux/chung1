@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html>
 
 <head>
@@ -42,8 +42,8 @@
 <body>
 
   <div id="start-screen">
-    <p>Hướng camera vào tranh/ảnh Thánh Gióng để xem khoảnh khắc Gióng bay về trời bằng AR.</p>
-    <button id="start-btn">Bắt đầu quét tranh</button>
+    <p>Hướng camera ảnh hoặc hình in để xem nội dung AR.</p>
+    <button id="start-btn">Bắt đầu quét</button>
   </div>
 
   <a-scene mindar-image="imageTargetSrc: ./targets.mind; autoStart: false; uiLoading: no; uiError: no; uiScanning: yes;"
@@ -51,13 +51,15 @@
     device-orientation-permission-ui="enabled: false">
 
     <a-assets>
-      <!-- Video AR Voi, preload để tải sẵn cho mượt hơn -->
-      <video id="giongVideo" src="./voi.mp4" preload="auto" loop="true" crossorigin="anonymous" playsinline
-        muted></video>
+      <!-- Chỉ một video cho một target duy nhất, preload metadata để giảm thời gian tải -->
+      <video id="video1" src="./voi.mp4" loop="true" crossorigin="anonymous" playsinline muted preload="metadata"></video>
     </a-assets>
-    <!-- Giả định targets.mind chỉ còn 1 ảnh marker tranh con voi ở index 0 -->
-    <a-entity id="giongTarget" mindar-image-target="targetIndex: 0">
-      <a-video src="#giongVideo" width="1" height="0.56" position="0 0 0"></a-video>
+
+    <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+    <!-- targets.mind chỉ có 1 ảnh ở index 0 -->
+    <a-entity id="target1" mindar-image-target="targetIndex: 0">
+      <a-video src="#video1" width="1" height="0.56" position="0 0 0"></a-video>
     </a-entity>
 
   </a-scene>
@@ -67,29 +69,19 @@
     const startScreen = document.querySelector('#start-screen');
     const sceneEl = document.querySelector('a-scene');
 
-    const giongVideo = document.querySelector('#giongVideo');
-    const giongTarget = document.querySelector('#giongTarget');
+    const v1 = document.querySelector('#video1');
+    const t1 = document.querySelector('#target1');
 
+    // Giữ behavior đơn giản giống ví dụ Thánh Gióng:
+    // chỉ ẩn màn hình giới thiệu và khởi động MindAR, không tự hiện alert.
     startBtn.addEventListener('click', () => {
       startScreen.style.display = 'none';
-
-      // "Làm nóng" video: tải và play một lần rồi pause để buffer sẵn
-      try {
-        giongVideo.load();
-        const playPromise = giongVideo.play();
-        if (playPromise !== undefined) {
-          playPromise.then(() => {
-            giongVideo.pause();
-          }).catch(() => { });
-        }
-      } catch (e) { }
-
       sceneEl.systems["mindar-image-system"].start();
     });
 
-    // Điều khiển video khi quét trúng tranh Thánh Gióng
-    giongTarget.addEventListener("targetFound", () => { giongVideo.play(); });
-    giongTarget.addEventListener("targetLost", () => { giongVideo.pause(); });
+    // Khi nhận diện được ảnh (target 0) thì chạy video, mất ảnh thì dừng
+    t1.addEventListener("targetFound", () => { v1 && v1.play(); });
+    t1.addEventListener("targetLost", () => { v1 && v1.pause(); });
   </script>
 </body>
 
